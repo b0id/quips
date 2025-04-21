@@ -106,15 +106,37 @@ def update_footer_tagline_in_repo(quip):
     # File path in the repository
     file_path = "src/components/Footer.jsx"
     
-    # API endpoints
-    get_file_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{file_path}"
+    # Print debug information
+    print(f"Attempting to access repository: {GITHUB_USERNAME}/{WEBSITE_REPO}")
+    print(f"Attempting to access file path: {file_path}")
     
-    # Headers for authentication
+    # Check if repo exists
+    repo_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
+    repo_response = requests.get(repo_url, headers=headers)
+    if repo_response.status_code != 200:
+        print(f"Repository not found. Status code: {repo_response.status_code}")
+        print(f"Response: {repo_response.text}")
+        return False
+    else:
+        print("Repository found successfully!")
+    
+    # List contents of repository to find the correct file path
+    contents_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents"
+    contents_response = requests.get(contents_url, headers=headers)
+    if contents_response.status_code == 200:
+        print("Repository contents:")
+        for item in contents_response.json():
+            print(f" - {item['name']} ({item['type']})")
+    
+    # API endpoints for the file
+    get_file_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{file_path}"
+    
+    # Rest of the function remains the same...
     try:
         # Get the current file to obtain its SHA
         response = requests.get(get_file_url, headers=headers)
@@ -123,6 +145,7 @@ def update_footer_tagline_in_repo(quip):
             print(f"Response: {response.text}")
             return False
         
+        # ...rest of the function...
         file_data = response.json()
         file_sha = file_data["sha"]
         
