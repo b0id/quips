@@ -103,35 +103,43 @@ def update_github_bio():
 
 def update_footer_tagline_in_repo(quip):
     """Updates the footer tagline in the website repository"""
-    # File path in the repository
-    file_path = "/src/components/Footer.jsx"
-    
-    # Print debug information
-    print(f"Attempting to access repository: {GITHUB_USERNAME}/{WEBSITE_REPO}")
-    print(f"Attempting to access file path: {file_path}")
-    
-    # Check if repo exists
-    repo_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}"
+    # Headers for authentication
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
-    repo_response = requests.get(repo_url, headers=headers)
-    if repo_response.status_code != 200:
-        print(f"Repository not found. Status code: {repo_response.status_code}")
-        print(f"Response: {repo_response.text}")
-        return False
-    else:
-        print("Repository found successfully!")
+    # Print debug information
+    print(f"Attempting to access repository: {GITHUB_USERNAME}/{WEBSITE_REPO}")
     
-    # List contents of repository to find the correct file path
-    contents_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents"
-    contents_response = requests.get(contents_url, headers=headers)
-    if contents_response.status_code == 200:
-        print("Repository contents:")
-        for item in contents_response.json():
+    # First, check src directory contents
+    src_path = "src"
+    src_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{src_path}"
+    
+    src_response = requests.get(src_url, headers=headers)
+    if src_response.status_code == 200:
+        print("Contents of src directory:")
+        for item in src_response.json():
             print(f" - {item['name']} ({item['type']})")
+        
+        # If components directory exists, check its contents
+        components_exists = any(item['name'] == 'components' and item['type'] == 'dir' for item in src_response.json())
+        
+        if components_exists:
+            components_path = "src/components"
+            components_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{components_path}"
+            
+            components_response = requests.get(components_url, headers=headers)
+            if components_response.status_code == 200:
+                print("Contents of components directory:")
+                for item in components_response.json():
+                    print(f" - {item['name']} ({item['type']})")
+            else:
+                print(f"Failed to access components directory. Status code: {components_response.status_code}")
+        else:
+            print("Components directory not found in src")
+    else:
+        print(f"Failed to access src directory. Status code: {src_response.status_code}")
     
     # API endpoints for the file
     get_file_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{file_path}"
