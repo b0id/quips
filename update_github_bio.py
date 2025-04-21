@@ -52,7 +52,6 @@ QUIPS = [
   "🎮 Midwife to Machines and Mayhem — Born systems. Raised patterns. Let them run simulations."
 ];
 
-# Optional: Get quote from external API instead
 def get_quote_from_api():
     try:
         response = requests.get("https://api.quotable.io/random?maxLength=100")
@@ -66,32 +65,21 @@ def get_quote_from_api():
         return random.choice(QUIPS)
 
 def update_github_bio():
-    """Updates GitHub profile bio with a random quip"""
-    # Choose whether to use local quips or external API
-    USE_EXTERNAL_API = False  # Set to True if you want quotes from the API
+    USE_EXTERNAL_API = False
     if USE_EXTERNAL_API:
         new_bio = get_quote_from_api()
     else:
         new_bio = random.choice(QUIPS)
     
-    # Add timestamp if desired
-    # new_bio += f" | Updated: {datetime.now().strftime('%Y-%m-%d')}"
-    
-    # GitHub API endpoint
     url = f"https://api.github.com/user"
-    
-    # Headers for authentication
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
-    
-    # Payload with new bio
     data = {
         "bio": new_bio
     }
     
-    # Update bio
     response = requests.patch(url, headers=headers, json=data)
     if response.status_code == 200:
         print(f"Successfully updated bio to: {new_bio}")
@@ -102,58 +90,26 @@ def update_github_bio():
         return None
 
 def update_footer_tagline_in_repo(quip):
-    """Updates the footer tagline in the website repository"""
+    # Define file path
+    file_path = "src/components/Footer.jsx"
+    
     # Headers for authentication
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
-    # Print debug information
-    print(f"Attempting to access repository: {GITHUB_USERNAME}/{WEBSITE_REPO}")
-    
-    # First, check src directory contents
-    src_path = "src"
-    src_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{src_path}"
-    
-    src_response = requests.get(src_url, headers=headers)
-    if src_response.status_code == 200:
-        print("Contents of src directory:")
-        for item in src_response.json():
-            print(f" - {item['name']} ({item['type']})")
-        
-        # If components directory exists, check its contents
-        components_exists = any(item['name'] == 'components' and item['type'] == 'dir' for item in src_response.json())
-        
-        if components_exists:
-            components_path = "src/components"
-            components_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{components_path}"
-            
-            components_response = requests.get(components_url, headers=headers)
-            if components_response.status_code == 200:
-                print("Contents of components directory:")
-                for item in components_response.json():
-                    print(f" - {item['name']} ({item['type']})")
-            else:
-                print(f"Failed to access components directory. Status code: {components_response.status_code}")
-        else:
-            print("Components directory not found in src")
-    else:
-        print(f"Failed to access src directory. Status code: {src_response.status_code}")
-    
-    # API endpoints for the file
+    # API endpoint for the file
     get_file_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{file_path}"
     
-    # Rest of the function remains the same...
     try:
         # Get the current file to obtain its SHA
         response = requests.get(get_file_url, headers=headers)
         if response.status_code != 200:
-            print(f"Failed to get file. Status code: {response.status_code}")
+            print(f"Failed to get file {file_path}. Status code: {response.status_code}")
             print(f"Response: {response.text}")
             return False
         
-        # ...rest of the function...
         file_data = response.json()
         file_sha = file_data["sha"]
         
