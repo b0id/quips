@@ -104,7 +104,7 @@ def update_github_bio():
 def update_footer_tagline_in_repo(quip):
     """Updates the footer tagline in the website repository"""
     # File path in the repository
-    file_path = "src/components/Footer.jsx"
+    file_path = "/src/components/Footer.jsx"
     
     # Print debug information
     print(f"Attempting to access repository: {GITHUB_USERNAME}/{WEBSITE_REPO}")
