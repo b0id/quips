@@ -11,6 +11,7 @@ WEBSITE_REPO = os.environ.get("WEBSITE_REPO", "b0id.github.io")
 
 # List of quips
 QUIPS = [
+    "😎Catch you in the next merge conflict. "
     "🦖 I am a man of many talents. (from the 80486 era)",
     "🧬 Systems Thinker with a Healer’s Touch — I see healthcare the same way I see code: modular, improvable, and deeply human.",
     "🧠 Epistemic Engineer — You’re not stockpiling knowledge—you’re engineering the infrastructure to wield it better.",
