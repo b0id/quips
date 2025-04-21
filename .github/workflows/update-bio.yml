@@ -23,7 +23,7 @@ jobs:
           pip install requests
       
       - name: Run update script
-        run: python update-bio.py
+        run: python update_github_bio.py
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
