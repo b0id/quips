@@ -1,13 +1,14 @@
 import requests
 import random
 import os
+import base64
 import re
 from datetime import datetime
 
 # Configuration
 GITHUB_TOKEN = os.environ.get("GH_TOKEN")
 GITHUB_USERNAME = os.environ.get("GH_USERNAME")
-
+WEBSITE_REPO = os.environ.get("WEBSITE_REPO", "b0id.github.io")  # Set this i
 # List of quips - add your own or use an external API
 QUIPS = [
     "🦖I am a man of many talents. (from the 80486 era)"
@@ -65,8 +66,9 @@ def get_quote_from_api():
         return random.choice(QUIPS)
 
 def update_github_bio():
+    """Updates GitHub profile bio with a random quip"""
     # Choose whether to use local quips or external API
-    USE_EXTERNAL_API = False # Set to True if you want quotes from the API
+    USE_EXTERNAL_API = False  # Set to True if you want quotes from the API
     if USE_EXTERNAL_API:
         new_bio = get_quote_from_api()
     else:
@@ -99,14 +101,33 @@ def update_github_bio():
         print(f"Response: {response.text}")
         return None
 
-def update_footer_tagline(quip):
-    """Updates the footer tagline in Footer.jsx"""
+def update_footer_tagline_in_repo(quip):
+    """Updates the footer tagline in the website repository"""
+    # File path in the repository
     file_path = "src/components/Footer.jsx"
     
+    # API endpoints
+    get_file_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{WEBSITE_REPO}/contents/{file_path}"
+    
+    # Headers for authentication
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
     try:
-        # Read the current file content
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
+        # Get the current file to obtain its SHA
+        response = requests.get(get_file_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to get file. Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        file_data = response.json()
+        file_sha = file_data["sha"]
+        
+        # Decode the file content
+        content = base64.b64decode(file_data["content"]).decode('utf-8')
         
         # Replace the footer tagline text using regex
         updated_content = re.sub(
@@ -115,14 +136,28 @@ def update_footer_tagline(quip):
             content
         )
         
-        # Write the updated content back
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(updated_content)
-            
-        print(f"Successfully updated footer tagline to: {quip}")
-        return True
+        # Encode the updated content
+        encoded_content = base64.b64encode(updated_content.encode('utf-8')).decode('utf-8')
+        
+        # Prepare commit data
+        commit_data = {
+            "message": "Update footer tagline via GitHub Action",
+            "content": encoded_content,
+            "sha": file_sha
+        }
+        
+        # Update the file in the repository
+        update_response = requests.put(get_file_url, headers=headers, json=commit_data)
+        if update_response.status_code == 200:
+            print(f"Successfully updated footer tagline in repository {WEBSITE_REPO}")
+            return True
+        else:
+            print(f"Failed to update file. Status code: {update_response.status_code}")
+            print(f"Response: {update_response.text}")
+            return False
+    
     except Exception as e:
-        print(f"Error updating footer tagline: {e}")
+        print(f"Error updating footer tagline in repository: {e}")
         return False
 
 if __name__ == "__main__":
@@ -134,6 +169,6 @@ if __name__ == "__main__":
     # Update GitHub bio and get the quip used
     quip = update_github_bio()
     
-    # Update footer tagline with the same quip
+    # Update footer tagline in the website repository with the same quip
     if quip:
-        update_footer_tagline(quip)
+        update_footer_tagline_in_repo(quip)
