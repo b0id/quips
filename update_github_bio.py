@@ -41,48 +41,40 @@ def update_github_bio(quip):
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
-    data = {"bio": quip}
-    response = requests.patch(url, headers=headers, json=data)
-
+    response = requests.patch(url, headers=headers, json={"bio": quip})
     if response.status_code == 200:
-        print(f"✅ Successfully updated GitHub bio: {quip}")
+        print(f"✅ GitHub bio updated: {quip}")
         return True
     else:
-        print(f"❌ Failed to update GitHub bio. Status: {response.status_code}")
-        print(response.text)
+        print(f"❌ GitHub bio update failed ({response.status_code}): {response.text}")
         return False
 
 def verify_and_get_file(headers, repo, path_parts):
     base_url = f"https://api.github.com/repos/{repo}/contents"
     current_path = ""
-
     for i, part in enumerate(path_parts):
         current_url = f"{base_url}/{current_path}" if current_path else base_url
+        print(f"📁 Checking: {current_url}")
         response = requests.get(current_url, headers=headers)
         if response.status_code != 200:
-            print(f"❌ Failed to access {current_url}. Status: {response.status_code}")
+            print(f"❌ Failed at {current_url} ({response.status_code})")
             return None
-
         contents = response.json()
-        found = next((item for item in contents if item["name"] == part), None)
-        if not found:
-            print(f"❌ '{part}' not found in {current_url}")
+        match = next((item for item in contents if item["name"] == part), None)
+        if not match:
+            print(f"❌ '{part}' not found.")
             return None
-
         if i == len(path_parts) - 1:
-            if found["type"] != "file":
+            if match["type"] != "file":
                 print(f"❌ '{part}' is not a file.")
                 return None
-            return {
-                "sha": found["sha"],
-                "path": found["path"]
-            }
+            print(f"✅ Found file: {match['path']}")
+            return {"sha": match["sha"], "path": match["path"].lstrip("/")}
         else:
-            if found["type"] != "dir":
+            if match["type"] != "dir":
                 print(f"❌ '{part}' is not a directory.")
                 return None
             current_path = f"{current_path}/{part}" if current_path else part
-
     return None
 
 def update_footer_tagline(quip):
@@ -91,48 +83,53 @@ def update_footer_tagline(quip):
         "Accept": "application/vnd.github.v3+json"
     }
     repo = f"{GITHUB_USERNAME}/{WEBSITE_REPO}"
-    target_path = ["src", "components", "Footer.jsx"]
-    file_info = verify_and_get_file(headers, repo, target_path)
+    path_parts = ["src", "components", "Footer.jsx"]
+    file_info = verify_and_get_file(headers, repo, path_parts)
 
     if not file_info:
+        print("❌ Could not locate Footer.jsx")
         return False
 
     file_url = f"https://api.github.com/repos/{repo}/contents/{file_info['path']}"
-    response = requests.get(file_url, headers=headers)
-
-    if response.status_code != 200:
-        print(f"❌ Could not retrieve file contents. Status: {response.status_code}")
+    print(f"📄 Preparing to patch: {file_url}")
+    get_response = requests.get(file_url, headers=headers)
+    if get_response.status_code != 200:
+        print(f"❌ File fetch failed ({get_response.status_code})")
+        print(get_response.text)
         return False
 
-    file_data = response.json()
-    content = base64.b64decode(file_data["content"]).decode("utf-8")
+    file_data = get_response.json()
+    decoded = base64.b64decode(file_data["content"]).decode("utf-8")
 
-    updated_content = re.sub(
+    updated = re.sub(
         r'<div className="footer-tagline">(.*?)</div>',
         f'<div className="footer-tagline">{quip}</div>',
-        content
+        decoded
     )
 
-    encoded_content = base64.b64encode(updated_content.encode("utf-8")).decode("utf-8")
+    if updated == decoded:
+        print("⚠️ No changes made. Tagline div unchanged or missing.")
+        return False
 
+    encoded = base64.b64encode(updated.encode("utf-8")).decode("utf-8")
     commit_data = {
-        "message": "Update footer tagline via automated script",
-        "content": encoded_content,
+        "message": f"Update footer tagline: {quip}",
+        "content": encoded,
         "sha": file_info["sha"]
     }
 
-    update_response = requests.put(file_url, headers=headers, json=commit_data)
-    if update_response.status_code == 200:
-        print(f"✅ Footer tagline updated successfully.")
+    put_response = requests.put(file_url, headers=headers, json=commit_data)
+    if put_response.status_code == 200:
+        print(f"✅ Footer.jsx updated with new tagline.")
         return True
     else:
-        print(f"❌ Failed to update file. Status: {update_response.status_code}")
-        print(update_response.text)
+        print(f"❌ Failed to update Footer.jsx ({put_response.status_code})")
+        print(put_response.text)
         return False
 
 if __name__ == "__main__":
     if not GITHUB_TOKEN or not GITHUB_USERNAME:
-        print("❌ GitHub token or username is not set in environment variables.")
+        print("❌ GH_TOKEN or GH_USERNAME missing.")
         exit(1)
 
     quip = get_random_quip()
