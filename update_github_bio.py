@@ -1,6 +1,7 @@
-import requests
+iimport requests
 import random
 import os
+import re
 from datetime import datetime
 
 # Configuration
@@ -65,8 +66,7 @@ def get_quote_from_api():
 
 def update_github_bio():
     # Choose whether to use local quips or external API
-    USE_EXTERNAL_API = False  # Set to True if you want quotes from the API
-    
+    USE_EXTERNAL_API = False # Set to True if you want quotes from the API
     if USE_EXTERNAL_API:
         new_bio = get_quote_from_api()
     else:
@@ -91,13 +91,38 @@ def update_github_bio():
     
     # Update bio
     response = requests.patch(url, headers=headers, json=data)
-    
     if response.status_code == 200:
         print(f"Successfully updated bio to: {new_bio}")
-        return True
+        return new_bio
     else:
         print(f"Failed to update bio. Status code: {response.status_code}")
         print(f"Response: {response.text}")
+        return None
+
+def update_footer_tagline(quip):
+    """Updates the footer tagline in Footer.jsx"""
+    file_path = "src/components/Footer.jsx"
+    
+    try:
+        # Read the current file content
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        # Replace the footer tagline text using regex
+        updated_content = re.sub(
+            r'<div className="footer-tagline">(.*?)</div>',
+            f'<div className="footer-tagline">{quip}</div>',
+            content
+        )
+        
+        # Write the updated content back
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(updated_content)
+            
+        print(f"Successfully updated footer tagline to: {quip}")
+        return True
+    except Exception as e:
+        print(f"Error updating footer tagline: {e}")
         return False
 
 if __name__ == "__main__":
@@ -106,4 +131,9 @@ if __name__ == "__main__":
         print("Please set GH_TOKEN and GH_USERNAME environment variables")
         exit(1)
     
-    update_github_bio()
+    # Update GitHub bio and get the quip used
+    quip = update_github_bio()
+    
+    # Update footer tagline with the same quip
+    if quip:
+        update_footer_tagline(quip)

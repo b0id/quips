@@ -1,33 +1,37 @@
-name: Update GitHub Bio
+name: Update Bio and Website Tagline
 
 on:
   schedule:
-    # Runs at 8:00 AM UTC every day
-    - cron: '0 8 * * *'
-  
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Runs at midnight UTC every day
+  workflow_dispatch:     # Allows manual trigger from GitHub Actions tab
 
 jobs:
-  update-bio:
+  update:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v3
-        
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-          
+          python-version: '3.10'
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
-          
-      - name: Update GitHub Bio
+      
+      - name: Run update script
+        run: python update_github_bio.py
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
-        run: python update_github_bio.py
+      
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add src/components/Footer.jsx
+          git commit -m "Update footer tagline" || echo "No changes to commit"
+          git push
