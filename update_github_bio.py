@@ -17,7 +17,7 @@ QUIPS = [
     "🦖 I am a man of many talents. (from the 80486 era)",
     "🧬 Systems Thinker with a Healer’s Touch — I see healthcare the same way I see code: modular, improvable, and deeply human.",
     "🧠 Epistemic Engineer — You’re not stockpiling knowledge—you’re engineering the infrastructure to wield it better.",
-    "🛠️ From Wrenches to Writeups — You’ve built fluid bed roasters and AI orchestration layers. If it can be engineered, you’re already halfway through it.",
+    "🛠️ From Wrenches to Writeups — I've built fluid bed roasters and AI orchestration layers. If it can be engineered, I am already halfway through it.",
     "🧗‍♂️ Recovery as R&D — I iterated through addiction like a system fault and emerged with new firmware.",
     "🧭 Human GPS for Complex Shit — I don’t just troubleshoot. I map. I navigate. I rebuild the signal path.",
     "🧵 Cross-Domain Thread Puller — I trace threads between science, systems, ethics, and care—and weave something better.",
