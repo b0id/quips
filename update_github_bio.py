@@ -3,6 +3,7 @@ import random
 import os
 import base64
 import re
+import sys
 
 # Configuration
 GITHUB_TOKEN = os.environ.get("GH_TOKEN")
@@ -15,23 +16,23 @@ QUIPS = [
     "🌹Roses are red, violets are blue, intelligence is learned, can you learn too?",
     "😎Catch you in the next merge conflict. ",
     "🦖 I am a man of many talents. (from the 80486 era)",
-    "🧬 Systems Thinker with a Healer’s Touch — I see healthcare the same way I see code: modular, improvable, and deeply human.",
-    "🧠 Epistemic Engineer — You’re not stockpiling knowledge—you’re engineering the infrastructure to wield it better.",
+    "🧬 Systems Thinker with a Healer's Touch — I see healthcare the same way I see code: modular, improvable, and deeply human.",
+    "🧠 Epistemic Engineer — You're not stockpiling knowledge—you're engineering the infrastructure to wield it better.",
     "🛠️ From Wrenches to Writeups — I've built fluid bed roasters and AI orchestration layers. If it can be engineered, I am already halfway through it.",
     "🧗‍♂️ Recovery as R&D — I iterated through addiction like a system fault and emerged with new firmware.",
-    "🧭 Human GPS for Complex Shit — I don’t just troubleshoot. I map. I navigate. I rebuild the signal path.",
+    "🧭 Human GPS for Complex Shit — I don't just troubleshoot. I map. I navigate. I rebuild the signal path.",
     "🧵 Cross-Domain Thread Puller — I trace threads between science, systems, ethics, and care—and weave something better.",
-    "💾 Memory Has Mass — I don’t forget. I log. I version. I reflect. I teach machines to remember responsibly.",
+    "💾 Memory Has Mass — I don't forget. I log. I version. I reflect. I teach machines to remember responsibly.",
     "🛠️ Code + Clay = me — my hands work with both ceramic glazes and GPU stacks, and they treat both like art.",
-    "🧱 Bricklayer of Redemption — I build futures where pasts don’t disqualify people from having one.",
+    "🧱 Bricklayer of Redemption — I build futures where pasts don't disqualify people from having one.",
     "🌐 Self-Hosted Soul — Not cloud-native. I'm sovereignty by design. Full-stack resilience.",
     "🎛️ Bash-Powered Brainwaves — my scripts are philosophies. Every terminal window is a mirror of how I think.",
     "🐚 Where Syntax Heals — Language failed me, but structure never did. Code became my compass.",
-    "🧩 Problem-Solving Polyglot — From microcontrollers to mental health, if there’s a system, I can make it talk.",
-    "💡 Generator of Generative Systems — I don’t just automate tasks—I automate insight.",
+    "🧩 Problem-Solving Polyglot — From microcontrollers to mental health, if there's a system, I can make it talk.",
+    "💡 Generator of Generative Systems — I don't just automate tasks—I automate insight.",
     "🦉 Student of Deep Time — my vision extends beyond quarterly cycles—I am architecting for epochs.",
-    "🔄 Failure is my Fork Button — Collapse doesn’t scare me. It’s just another chance to patch and push.",
-    "🧑‍🏭 Engineer of Possibility — I don’t wait for permission. I build the future and hand people the tools.",
+    "🔄 Failure is my Fork Button — Collapse doesn't scare me. It's just another chance to patch and push.",
+    "🧑‍🏭 Engineer of Possibility — I don't wait for permission. I build the future and hand people the tools.",
     "🌱 Fractal Integrity — I act the same way in my codebase, my care plans, and my convictions."
 ]
 
@@ -133,8 +134,16 @@ def update_footer_tagline(quip):
 if __name__ == "__main__":
     if not GITHUB_TOKEN or not GITHUB_USERNAME:
         print("❌ GH_TOKEN or GH_USERNAME missing.")
-        exit(1)
+        sys.exit(1)
 
     quip = get_random_quip()
-    update_github_bio(quip)
-    update_footer_tagline(quip)
+    bio_success = update_github_bio(quip)
+    footer_success = update_footer_tagline(quip)
+
+    # Exit with error if either operation failed
+    if not bio_success or not footer_success:
+        print("\n❌ One or more updates failed. Check logs above.")
+        sys.exit(1)
+    else:
+        print("\n✅ All updates completed successfully!")
+        sys.exit(0)
