@@ -108,7 +108,8 @@ def update_footer_tagline(quip):
     updated = re.sub(
         r'<div className="footer-tagline">(.*?)</div>',
         f'<div className="footer-tagline">{quip}</div>',
-        decoded
+        decoded,
+        flags=re.DOTALL
     )
 
     if updated == decoded:
